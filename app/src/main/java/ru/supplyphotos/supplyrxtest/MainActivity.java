@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
         Disposable disposable = apiService.getPhotoId(tokenUser, orderItemId, fileName)
                 .doOnNext(photoId -> Log.d("Start",
                         String.valueOf(photoId.toString())))
-                .flatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData()
-                        .getPhotoId()))
+                .map(Mappers::mapPhotoId)
+                .flatMap(i -> apiService.getUploadUrl(tokenUser, i))
                 .doOnNext(uploadUrl -> Log.d("Start", uploadUrl.getData().toString()))
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::readUrlResponse, this::onError);
