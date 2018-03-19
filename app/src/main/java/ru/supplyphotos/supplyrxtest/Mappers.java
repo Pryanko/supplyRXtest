@@ -13,6 +13,7 @@ import java.util.List;
 import io.reactivex.Observable;
 import ru.supplyphotos.supplyrxtest.data.ImageFile;
 import ru.supplyphotos.supplyrxtest.data.PhotoIdFile;
+import ru.supplyphotos.supplyrxtest.data.cloud_upload_url.UploadUrl;
 import ru.supplyphotos.supplyrxtest.data.order_id.OrderId;
 import ru.supplyphotos.supplyrxtest.data.photo_id.PhotoId;
 
@@ -56,12 +57,19 @@ public class Mappers {
         return imageFiles;
     }
 
-    public static PhotoIdFile zipPhotoIdFile (ImageFile imageFile, Observable<PhotoId> photoId){
+    public static PhotoIdFile zipPhotoIdFile (ImageFile imageFile, PhotoId photoId){
         PhotoIdFile photoIdFile = new PhotoIdFile();
         photoIdFile.setFile(imageFile.getFile());
         photoIdFile.setPhoto_id(photoId.getData().getPhotoId());
         return photoIdFile;
 
+    }
+
+    public static PhotoIdFile mapPhotoUrlFile(UploadUrl uploadUrl, File file){
+        PhotoIdFile photoIdFile = new PhotoIdFile();
+        photoIdFile.setUploadUrl(uploadUrl.getData().getUrl());
+        photoIdFile.setFile(file);
+        return photoIdFile;
     }
 
 

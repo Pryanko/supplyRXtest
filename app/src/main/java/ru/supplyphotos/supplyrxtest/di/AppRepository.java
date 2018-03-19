@@ -1,5 +1,6 @@
 package ru.supplyphotos.supplyrxtest.di;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,16 @@ public class AppRepository {
     private Integer orderId;
 
 
+    public File getFileImage() {
+        return fileImage;
+    }
 
+    public void setFileImage(File fileImage) {
+        this.fileImage = fileImage;
+    }
+
+    private File fileImage;
+    private String nameFile;
     private Integer orderItemId;
     private List<String> listPathImages;
 
@@ -55,6 +65,14 @@ public class AppRepository {
 
     public void setOrderItemId(Integer orderItemId) {
         this.orderItemId = orderItemId;
+    }
+
+    public String getNameFile() {
+        return nameFile;
+    }
+
+    public void setNameFile(String nameFile) {
+        this.nameFile = nameFile;
     }
 
 

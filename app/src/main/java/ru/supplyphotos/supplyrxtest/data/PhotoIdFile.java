@@ -10,6 +10,17 @@ public class PhotoIdFile {
 
     private File file;
     private Integer photo_id;
+    private String uploadUrl;
+
+    public String getUploadUrl() {
+        return uploadUrl;
+    }
+
+    public void setUploadUrl(String uploadUrl) {
+        this.uploadUrl = uploadUrl;
+    }
+
+
 
     public File getFile() {
         return file;

@@ -13,17 +13,26 @@ import com.vistrav.ask.Ask;
 import com.vistrav.ask.annotations.AskDenied;
 import com.vistrav.ask.annotations.AskGranted;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.BiFunction;
 
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import ru.supplyphotos.supplyrxtest.data.ImageFile;
+import ru.supplyphotos.supplyrxtest.data.PhotoIdFile;
 import ru.supplyphotos.supplyrxtest.data.cloud_upload_url.UploadUrl;
 import ru.supplyphotos.supplyrxtest.data.order_item_id.OrderItemId;
+import ru.supplyphotos.supplyrxtest.data.photo_id.PhotoId;
 import ru.supplyphotos.supplyrxtest.di.AppRepository;
 
 
@@ -84,23 +93,56 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendPhoto(){
 
-      /*  compositeDisposable.add(appRepository.getObservableListPathImage()
-                        .map(Mappers::mapImageFile)
-
-             /*           .zipWith(Observable.range(pathImageList, apiService.getPhotoId(tokenUser,
-                                appRepository.getOrderItemId(), "qwer.jpg"), pathImageList.size())
 
 
+        compositeDisposable.add(appRepository.getObservableListPathImage()
 
-
-                //.flatMap(Observable::fromIterable)
-                /*.flatMap(imageFile -> apiService.getPhotoId(tokenUser, appRepository.getOrderItemId(),
+                .map(Mappers::mapImageFile)
+                .flatMap(Observable::fromIterable)
+                .flatMap(this::setCasheFile)
+               /* .doOnNext(imageFile ->
+                {appRepository.setFileImage(imageFile.getFile());
+                               Log.d("ImageFile", imageFile.getNameImage());})*/
+                .flatMap(imageFile -> apiService.getPhotoId(tokenUser, appRepository.getOrderItemId(),
                         imageFile.getNameImage()))
-
-               /* .flatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData().getPhotoId()))
+                .flatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData().getPhotoId()))
+                .map(uploadUrl -> Mappers.mapPhotoUrlFile(uploadUrl, appRepository.getFileImage()))
+                .flatMap(this::sendPhoto)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::readUrlResponse, this::onError));*/
-        ;
+                .subscribe(this::createPhoto, this::onError));
+
+    }
+
+    private Observable<ImageFile> setCasheFile(ImageFile imageFile){
+        appRepository.setFileImage(imageFile.getFile());
+        Log.d("ImageFile", imageFile.getNameImage());
+        return Observable.just(imageFile);
+    }
+
+    private Observable<ResponseBody> sendPhoto(PhotoIdFile photoIdFile){
+
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), photoIdFile.getFile());
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", photoIdFile.getFile().getName(), requestFile);
+        return apiService.uploadPhoto(photoIdFile.getUploadUrl(), body);
+
+    }
+
+ /*   private void upLoadPhoto(PhotoIdFile photoIdFile){
+        UploadImageService uploadImageService = new UploadImageService();
+        ApiService apiService1 = uploadImageService.getRetrofit().create(ApiService.class);
+
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), photoIdFile.getFile());
+
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", "file.jpg", requestFile);
+       // String path = photoIdFile.getUploadUrl().substring(9);
+        compositeDisposable.add(apiService1.uploadPhoto(photoIdFile.getUploadUrl(), body)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::createPhoto));
+
+    }*/
+
+    private void createPhoto(ResponseBody responseBody) throws IOException {
+        textView.setText(responseBody.toString());
     }
 
 
@@ -108,6 +150,8 @@ public class MainActivity extends AppCompatActivity {
         textView.setText("Создан order_id:" + String.valueOf(appRepository.getOrderId())
                 + "  " + "Создан order_item_id:" + String.valueOf(orderItemId.getData().getOrderItemId()));
     }
+
+
 
     private void startRxShow(){
         Log.d("Start", "OK");
