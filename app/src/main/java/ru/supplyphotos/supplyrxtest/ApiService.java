@@ -4,6 +4,7 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import java.io.IOException;
 
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.Interceptor;
@@ -17,6 +18,8 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Query;
 import ru.supplyphotos.supplyrxtest.data.cloud_upload_url.UploadUrl;
+import ru.supplyphotos.supplyrxtest.data.order_id.OrderId;
+import ru.supplyphotos.supplyrxtest.data.order_item_id.OrderItemId;
 import ru.supplyphotos.supplyrxtest.data.photo_id.PhotoId;
 
 /**
@@ -26,11 +29,18 @@ import ru.supplyphotos.supplyrxtest.data.photo_id.PhotoId;
 public interface ApiService {
 
 
+    @GET("order-create")
+    Observable<OrderId> createOrder(@Query("access_token") String token);
+
+    @GET("order-item-create")
+    Observable<OrderItemId> createOrderItem(@Query("access_token") String token,
+                                            @Query("order_id") Integer order_id,
+                                            @Query("service_id") Integer service_id);
+
     @GET("photo-add")
     Observable<PhotoId> getPhotoId(@Query("access_token") String token,
-                                        @Query("order_item_id") Integer order_item,
-                                        @Query("filename") String filename);
-
+                                 @Query("order_item_id") Integer order_item,
+                                 @Query("filename") String filename);
 
     @GET("photo-get-upload-url")
     Observable<UploadUrl> getUploadUrl(@Query("access_token") String token,
