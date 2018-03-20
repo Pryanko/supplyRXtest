@@ -15,15 +15,17 @@ import com.vistrav.ask.annotations.AskGranted;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.BiFunction;
 
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 
+import io.reactivex.functions.BiFunction;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -32,7 +34,6 @@ import ru.supplyphotos.supplyrxtest.data.ImageFile;
 import ru.supplyphotos.supplyrxtest.data.PhotoIdFile;
 import ru.supplyphotos.supplyrxtest.data.cloud_upload_url.UploadUrl;
 import ru.supplyphotos.supplyrxtest.data.order_item_id.OrderItemId;
-import ru.supplyphotos.supplyrxtest.data.photo_id.PhotoId;
 import ru.supplyphotos.supplyrxtest.di.AppRepository;
 
 
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView) findViewById(R.id.url_text);
         compositeDisposable = new CompositeDisposable();
         apiService = ApiService.retrofit.create(ApiService.class);
-        buttonSend.setOnClickListener(v -> sendPhoto());
+        buttonSend.setOnClickListener(v -> test());
         buttonGallery.setOnClickListener(v -> openGallery());
         buttonOrder.setOnClickListener(v -> createOrder());
 
@@ -90,6 +91,49 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private ObservableSource<ImageFile> getImageFile(){
+        return appRepository.getObservableListPathImage()
+                .map(Mappers::mapImageFile)
+                .concatMap(Observable::fromIterable);
+    }
+
+
+    private Observable<UploadUrl> getListUploadUrl(){
+        return appRepository.getObservableListPathImage()
+
+                .map(Mappers::mapImageFile)
+                .concatMap(Observable::fromIterable)
+                .concatMap(this::setCasheFile)
+
+               /* .doOnNext(imageFile ->
+                {appRepository.setFileImage(imageFile.getFile());
+                               Log.d("ImageFile", imageFile.getNameImage());})*/
+                .concatMap(imageFile -> apiService.getPhotoId(tokenUser, appRepository.getOrderItemId(),
+                        imageFile.getNameImage()))
+                .concatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData().getPhotoId()));
+    }
+
+    private Observable<ImageFile> getListImageFile(){
+        return appRepository.getObservableListPathImage()
+                .map(Mappers::mapImageFile)
+                .flatMap(Observable::fromIterable);
+    }
+
+    
+    private void test(){
+        getListUploadUrl().zipWith(getListImageFile(), (uploadUrl, imageFile) -> {
+            PhotoIdFile photoIdFile = new PhotoIdFile();
+            photoIdFile.setFile(imageFile.getFile());
+            photoIdFile.setUploadUrl(uploadUrl.getData().getUrl());
+            return photoIdFile;
+        })
+                .flatMap(this::sendPhoto)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::createPhoto, this::onError);
+
+    }
+    
+
 
     private void sendPhoto(){
 
@@ -98,16 +142,25 @@ public class MainActivity extends AppCompatActivity {
         compositeDisposable.add(appRepository.getObservableListPathImage()
 
                 .map(Mappers::mapImageFile)
-                .flatMap(Observable::fromIterable)
-                .flatMap(this::setCasheFile)
-               /* .doOnNext(imageFile ->
+                .concatMap(Observable::fromIterable)
+                .concatMap(this::setCasheFile)
+                
+                .doOnNext(imageFile ->
                 {appRepository.setFileImage(imageFile.getFile());
-                               Log.d("ImageFile", imageFile.getNameImage());})*/
-                .flatMap(imageFile -> apiService.getPhotoId(tokenUser, appRepository.getOrderItemId(),
+                               Log.d("ImageFile", imageFile.getNameImage());})
+                .concatMap(imageFile -> apiService.getPhotoId(tokenUser, appRepository.getOrderItemId(),
                         imageFile.getNameImage()))
-                .flatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData().getPhotoId()))
-                .map(uploadUrl -> Mappers.mapPhotoUrlFile(uploadUrl, appRepository.getFileImage()))
-                .flatMap(this::sendPhoto)
+                .concatMap(photoId -> apiService.getUploadUrl(tokenUser, photoId.getData().getPhotoId()))
+
+                .zipWith(appRepository.getFike(), ((uploadUrl, file) -> {
+                    PhotoIdFile photoIdFile = new PhotoIdFile();
+                    photoIdFile.setFile(file);
+                    photoIdFile.setUploadUrl(uploadUrl.getData().getUrl());
+                    return photoIdFile;
+                }))
+
+                .concatMap(this::sendPhoto)
+
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::createPhoto, this::onError));
 
@@ -121,28 +174,18 @@ public class MainActivity extends AppCompatActivity {
 
     private Observable<ResponseBody> sendPhoto(PhotoIdFile photoIdFile){
 
+        Log.d("Name image", photoIdFile.getFile().getName());
+
         RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), photoIdFile.getFile());
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", photoIdFile.getFile().getName(), requestFile);
         return apiService.uploadPhoto(photoIdFile.getUploadUrl(), body);
 
     }
 
- /*   private void upLoadPhoto(PhotoIdFile photoIdFile){
-        UploadImageService uploadImageService = new UploadImageService();
-        ApiService apiService1 = uploadImageService.getRetrofit().create(ApiService.class);
 
-        RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), photoIdFile.getFile());
-
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", "file.jpg", requestFile);
-       // String path = photoIdFile.getUploadUrl().substring(9);
-        compositeDisposable.add(apiService1.uploadPhoto(photoIdFile.getUploadUrl(), body)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::createPhoto));
-
-    }*/
 
     private void createPhoto(ResponseBody responseBody) throws IOException {
-        textView.setText(responseBody.toString());
+        textView.setText(responseBody.string());
     }
 
 
