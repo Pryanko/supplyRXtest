@@ -2,6 +2,8 @@ package ru.supplyphotos.supplyrxtest;
 
 import android.app.Application;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+
 import ru.supplyphotos.supplyrxtest.di.AppComponent;
 import ru.supplyphotos.supplyrxtest.di.DaggerAppComponent;
 
@@ -19,6 +21,8 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Fresco.initialize(this);
 
 
         appComponent = DaggerAppComponent.builder()
