@@ -29,7 +29,7 @@ public class Utils {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         Bitmap bitmap = null;
-      /*  try {
+        try {
 
 
             bitmap = Bitmap.createScaledBitmap(cropBitmap(BitmapFactory
@@ -40,7 +40,7 @@ public class Utils {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             Log.d("ERROR", "ERROR");
-        }  */
+        }
         page++;
 
         stateFile.setBitmap(bitmap);

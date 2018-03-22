@@ -3,6 +3,8 @@ package ru.supplyphotos.supplyrxtest;
 import android.app.Application;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
+import com.facebook.imagepipeline.decoder.SimpleProgressiveJpegConfig;
 
 import ru.supplyphotos.supplyrxtest.di.AppComponent;
 import ru.supplyphotos.supplyrxtest.di.DaggerAppComponent;
@@ -22,7 +24,13 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        Fresco.initialize(this);
+        ImagePipelineConfig config = ImagePipelineConfig.newBuilder(this)
+                .setProgressiveJpegConfig(new SimpleProgressiveJpegConfig())
+                .setResizeAndRotateEnabledForNetwork(true)
+                .setDownsampleEnabled(true)
+                .build();
+
+        Fresco.initialize(this, config);
 
 
         appComponent = DaggerAppComponent.builder()

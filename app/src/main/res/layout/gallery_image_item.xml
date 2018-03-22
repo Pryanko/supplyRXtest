@@ -1,14 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="160dp"
+    android:layout_height="160dp"
+    app:cardCornerRadius="2dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:contentPaddingRight="4dp">
+    >
 
 
-    <ImageView
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:clickable="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:cropToPadding="true"
         android:id="@+id/drawee_image_gallery"
         android:layout_width="150dp"
         android:layout_height="150dp" />
+
+    <com.hanks.library.AnimateCheckBox
+        android:visibility="visible"
+        
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal|bottom"
+        android:layout_marginBottom="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:id="@+id/checkBox"
+        app:animDuration="200"
+        app:checkedColor="#d8f700ff"
+        app:lineColor="#fff"
+        app:lineWidth="1.2dp"
+        app:unCheckColor="#c950504a"
+        android:layout_width="45dp"
+        android:layout_height="45dp" />
+
+    </RelativeLayout>
 
 </android.support.v7.widget.CardView>

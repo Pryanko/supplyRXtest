@@ -17,7 +17,7 @@ import android.util.Log;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import com.facebook.drawee.view.SimpleDraweeView;
+
 import com.vistrav.ask.Ask;
 import com.vistrav.ask.annotations.AskDenied;
 import com.vistrav.ask.annotations.AskGranted;
@@ -51,16 +51,28 @@ public class GalleryActivity extends AppCompatActivity{
 
 
 
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
+
+        
+
+
+
+        
+
+
+
+
+
         recyclerView = (RecyclerView) findViewById(R.id.image);
-        galleryAdapter = new GalleryAdapter();
+        galleryAdapter = new GalleryAdapter(this);
 
 
         Ask.on(this)
-                .id(2) // in case you are invoking multiple time Ask from same activity or fragment
+                .id(1) // in case you are invoking multiple time Ask from same activity or fragment
                 .forPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .withRationales("In order to save file you will need to grant storage permission") //optional
                 .go();
@@ -124,31 +136,26 @@ public class GalleryActivity extends AppCompatActivity{
             
             imagecursor.moveToPosition(i);
             int dataColumnIndex = imagecursor.getColumnIndex(MediaStore.Images.Media.DATA);
-            imageUrls.add(imagecursor.getString(dataColumnIndex));
+            imageUrls.add("file://" + imagecursor.getString(dataColumnIndex));
             Log.d("TAG", imagecursor.getString(dataColumnIndex));
             //Log.d("Path file", imageUrls.get(i));
         }
         imagecursor.close();
-
+        addImage(imageUrls);
 
     }
 
-    private void StartRx(){
-        Disposable disposable = Flowable.just(imageUrls)
-                .subscribeOn(Schedulers.newThread())
-                .flatMap(Flowable::fromIterable)
-                .flatMap(s -> Utils.addImage(s))
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::addImage, this::onError);
-    }
+
+
+
 
     private void onError(Throwable throwable) {
     }
 
-    private void addImage(StateFile stateFile) {
-        recyclerView.setLayoutManager( new GridLayoutManager(this, 2, LinearLayoutManager.VERTICAL, false));
+    private void addImage(List<String> s) {
+        recyclerView.setLayoutManager( new GridLayoutManager(this, 3, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(galleryAdapter);
-        galleryAdapter.updateImageList(file);
+        galleryAdapter.updateImageList(s);
 
     }
 
